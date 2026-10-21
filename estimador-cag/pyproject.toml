@@ -1,0 +1,13 @@
+[project]
+name = "estimador-cag"
+version = "0.1.0"
+description = "API de estimación con CAG (Cache-Augmented Generation)"
+readme = "README.md"
+authors = [
+    { name = "Tomas Herrero Diez", email = "tomas.herrero@devbase.us" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi[standard]>=0.156.8",
+    "pydantic-settings>=2.16.1",
+]
