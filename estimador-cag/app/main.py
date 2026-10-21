@@ -9,7 +9,6 @@ app = FastAPI(title="Estimador CAG", debug=settings.APP_ENV == "development")
 
 app.include_router(estimations.router)
 
-
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}

@@ -1,20 +1,12 @@
 from fastapi import APIRouter
-from pydantic import BaseModel
 
+from app.schemas.estimations import EstimationRequest, EstimationResponse
 from app.services.llm_service import LLMService
 
-router = APIRouter(prefix="/estimations", tags=["estimations"])
+router = APIRouter(prefix="/api/v1", tags=["estimations"])
 
 
-class EstimationRequest(BaseModel):
-    description: str
-
-
-class EstimationResponse(BaseModel):
-    estimation: str
-
-
-@router.post("", response_model=EstimationResponse)
+@router.post("/estimate", response_model=EstimationResponse)
 async def create_estimation(payload: EstimationRequest) -> EstimationResponse:
-    result = await LLMService().estimate(payload.description)
-    return EstimationResponse(estimation=result)
+    result = await LLMService().estimate(payload.transcription)
+    return EstimationResponse(**result)
