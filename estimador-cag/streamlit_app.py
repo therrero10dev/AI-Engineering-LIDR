@@ -2,28 +2,26 @@ import httpx
 import streamlit as st
 
 API_URL = st.secrets.get("API_URL", "http://localhost:8000")
-ESTIMATE_ENDPOINT = f"{API_URL}/api/v1/estimate"
+ESTIMATE_STREAM_ENDPOINT = f"{API_URL}/api/v1/estimate/stream"
 
 def stream_estimation(transcription: str):
     """Llama al endpoint de estimaciones y emite la respuesta como stream."""
     try:
-        response = httpx.post(
-            ESTIMATE_ENDPOINT,
+        with httpx.stream(
+            "POST",
+            ESTIMATE_STREAM_ENDPOINT,
             json={"transcription": transcription},
             timeout=120,
-        )
-        response.raise_for_status()
+        ) as response:
+            response.raise_for_status()
+            yield from response.iter_text()
     except httpx.HTTPStatusError as e:
         if e.response.status_code == 422:
             yield "La transcripción debe tener al menos 50 caracteres."
         else:
             yield f"Error del servidor ({e.response.status_code})."
-        return
     except httpx.RequestError as e:
-        yield f"No se pudo conectar con {ESTIMATE_ENDPOINT}: {e}"
-        return
-
-    yield response.json()["estimation"]
+        yield f"No se pudo conectar con {ESTIMATE_STREAM_ENDPOINT}: {e}"
 
 
 # Inicializar historial en session_state

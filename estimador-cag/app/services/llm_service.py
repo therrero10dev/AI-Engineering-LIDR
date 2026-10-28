@@ -1,4 +1,6 @@
-from openai import OpenAI
+from collections.abc import AsyncIterator
+
+from openai import AsyncOpenAI, OpenAI
 
 from app.config import Settings, get_settings
 from app.context.examples import EXAMPLES
@@ -7,6 +9,7 @@ class LLMService:
     def __init__(self, settings: Settings | None = None) -> None:
         self.settings = settings or get_settings()
         self.client = OpenAI(api_key=self.settings.OPENAI_API_KEY)
+        self.async_client = AsyncOpenAI(api_key=self.settings.OPENAI_API_KEY)
 
     def build_prompt(self) -> str:
         examples = "\n\n".join(
@@ -32,3 +35,18 @@ class LLMService:
             "model": self.settings.LLM_MODEL,
             "provider": self.settings.LLM_PROVIDER,
         }
+
+
+    async def estimate_stream(self, description: str) -> AsyncIterator[str]:
+        stream = await self.async_client.chat.completions.create(
+            model=self.settings.LLM_MODEL,
+            messages=[
+                {"role": "system", "content": self.build_prompt()},
+                {"role": "user", "content": description},
+            ],
+            temperature=0.5,
+            stream=True,
+        )
+        async for chunk in stream:
+            if chunk.choices and chunk.choices[0].delta.content:
+                yield chunk.choices[0].delta.content
